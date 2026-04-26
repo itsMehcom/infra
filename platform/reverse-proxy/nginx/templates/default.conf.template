@@ -1,0 +1,18 @@
+server {
+    # The default_server directive catches all requests that don't match a defined server_name
+    listen 80 default_server;
+    server_name _;
+
+    # Ensure responses are sent as plain text
+    default_type text/plain;
+
+    # Healthcheck endpoint
+    location = /ping {
+        return 200 "pong\n";
+    }
+
+    # Catch-all response for everything else
+    location / {
+        return 200 "everything is working fine.\n";
+    }
+}
