@@ -1,0 +1,19 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  PostgreSQL Platform — Cron Schedule                      ║
+# ║  Install: crontab /opt/infra/platform/postgres/cron/postgres-backup-cron
+# ╚═══════════════════════════════════════════════════════════╝
+#
+# All times are in server-local timezone (Asia/Kolkata IST).
+# Logs are written to /opt/infra/logs/postgres/
+
+# Daily physical backup at 2:00 AM IST
+0 2 * * * /opt/infra/platform/postgres/scripts/backup.sh >> /opt/infra/logs/postgres/backup.log 2>&1
+
+# Daily logical dumps of all service databases at 3:00 AM IST
+0 3 * * * /opt/infra/platform/postgres/scripts/dump-service-db.sh --all >> /opt/infra/logs/postgres/dump.log 2>&1
+
+# Weekly vacuum maintenance on Sundays at 4:00 AM IST
+0 4 * * 0 /opt/infra/platform/postgres/scripts/vacuum-maintenance.sh >> /opt/infra/logs/postgres/maintenance.log 2>&1
+
+# Hourly health check
+0 * * * * /opt/infra/platform/postgres/scripts/healthcheck.sh >> /opt/infra/logs/postgres/health.log 2>&1

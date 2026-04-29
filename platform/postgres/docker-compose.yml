@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:18.3-bookworm
+    container_name: postgres
+    restart: unless-stopped
+
+    env_file:
+      - ../../environments/production/postgres.env
+
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./conf/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./backups:/backups
+      - ../../../logs/postgres:/var/log/postgresql
+
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+
+    networks:
+      - internal
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-itsmeh_admin}" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+  # ─────────────────────────────────────────────────────────
+  # PgBouncer — Connection Pooler
+  # Uncomment when you need connection pooling.
+  # Note: Phoenix uses its own DB pool, so this may conflict
+  #       with named prepared statements. Test before enabling.
+  # ─────────────────────────────────────────────────────────
+  # pgbouncer:
+  #   image: bitnami/pgbouncer:latest
+  #   container_name: pgbouncer
+  #   restart: unless-stopped
+  #
+  #   env_file:
+  #     - ../../environments/production/postgres.env
+  #
+  #   environment:
+  #     - POSTGRESQL_HOST=postgres
+  #     - POSTGRESQL_PORT=5432
+  #     - PGBOUNCER_PORT=6432
+  #     - PGBOUNCER_AUTH_TYPE=scram-sha-256
+  #     - PGBOUNCER_POOL_MODE=${PGBOUNCER_POOL_MODE:-transaction}
+  #     - PGBOUNCER_MAX_CLIENT_CONN=${PGBOUNCER_MAX_CLIENT_CONN:-200}
+  #     - PGBOUNCER_DEFAULT_POOL_SIZE=${PGBOUNCER_DEFAULT_POOL_SIZE:-25}
+  #     - PGBOUNCER_DATABASE=*
+  #     - POSTGRESQL_USERNAME=${POSTGRES_USER:-itsmeh_admin}
+  #     - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+  #
+  #   networks:
+  #     - internal
+  #
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432"]
+  #     interval: 15s
+  #     timeout: 5s
+  #     retries: 3
+
+  # ─────────────────────────────────────────────────────────
+  # Prometheus Postgres Exporter
+  # Uncomment when Prometheus/Grafana stack is deployed.
+  # Exposes metrics at :9187/metrics
+  # ─────────────────────────────────────────────────────────
+  # postgres-exporter:
+  #   image: quay.io/prometheuscommunity/postgres-exporter:latest
+  #   container_name: postgres-exporter
+  #   restart: unless-stopped
+  #
+  #   environment:
+  #     - DATA_SOURCE_NAME=${PG_EXPORTER_DSN}
+  #
+  #   networks:
+  #     - internal
+  #
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9187/metrics | head -1"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  internal:
+    external: true
