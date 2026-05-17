@@ -22,6 +22,22 @@ echo "✅ PostgreSQL is ready."
 echo ""
 
 # ─────────────────────────────────────────────────────────
+# 1.5. Deploy pgAdmin Platform
+# ─────────────────────────────────────────────────────────
+echo "━━━ pgAdmin Database Manager ━━━"
+
+cd "${INFRA_ROOT}/platform/pgadmin"
+
+echo "Deploying pgAdmin..."
+docker compose up -d
+
+echo "Waiting for pgAdmin to become healthy..."
+sleep 5
+
+echo "✅ pgAdmin is ready."
+echo ""
+
+# ─────────────────────────────────────────────────────────
 # 2. Deploy Reverse Proxy (Nginx)
 # ─────────────────────────────────────────────────────────
 echo "━━━ Nginx Reverse Proxy ━━━"

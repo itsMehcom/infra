@@ -16,6 +16,7 @@ services:
       - ./templates:/etc/nginx/templates:ro
       - ./snippets:/etc/nginx/snippets:ro
       - ../../../logs/nginx:/var/log/nginx
+      - ./.htpasswd:/etc/nginx/conf.d/.htpasswd:ro
       # - ../../..//certs:/etc/nginx/certs:ro
 
     networks:

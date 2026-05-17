@@ -1,0 +1,39 @@
+services:
+  pgadmin:
+    image: dpage/pgadmin4:9.15
+    container_name: pgadmin
+    restart: unless-stopped
+
+    env_file:
+      - ../../environments/production/pgadmin.env
+      - ../../environments/production/postgres.env   # provides POSTGRES_USER
+
+    entrypoint: /pgadmin4/entrypoint-wrapper.sh
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./conf/entrypoint-wrapper.sh:/pgadmin4/entrypoint-wrapper.sh:ro
+      - ../../../logs/pgadmin:/var/log/pgadmin
+
+    networks:
+      - internal
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/misc/ping || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  pgadmin_data:
+    driver: local
+
+networks:
+  internal:
+    external: true

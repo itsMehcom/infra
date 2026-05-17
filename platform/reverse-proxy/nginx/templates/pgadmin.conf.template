@@ -1,0 +1,31 @@
+# ─────────────────────────────────────────────────────────
+# pgAdmin — Database Management UI
+#
+# Reverse proxy for pgAdmin behind the Darbar gateway.
+# Access: pgadmin.${PLATFORM_SUBDOMAIN}.${DOMAIN}
+# Auth:   HTTP Basic Auth (shared Darbar credentials)
+# ─────────────────────────────────────────────────────────
+
+server {
+    listen 80;
+    server_name pgadmin.${PLATFORM_SUBDOMAIN}.${DOMAIN};
+
+    include /etc/nginx/snippets/darbar-auth.conf;
+
+    location / {
+        # Defer DNS resolution so nginx doesn't crash if pgadmin isn't running at startup
+        set $pgadmin_backend "pgadmin:80";
+        proxy_pass http://$pgadmin_backend;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Script-Name "";
+
+        proxy_read_timeout 300;
+        proxy_connect_timeout 60;
+    }
+}

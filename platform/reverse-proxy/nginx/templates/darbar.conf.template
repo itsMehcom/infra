@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────
+# Darbar — Platform Services Index
+#
+# The "royal court" landing page. Lists all platform
+# services available under *.darbar.example.com.
+#
+# Add new service links here as they are onboarded.
+# ─────────────────────────────────────────────────────────
+
+server {
+    listen 80;
+    server_name ${PLATFORM_SUBDOMAIN}.${DOMAIN};
+
+    include /etc/nginx/snippets/darbar-auth.conf;
+
+    location = /ping {
+        auth_basic off;
+        default_type text/plain;
+        return 200 "pong\n";
+    }
+
+    location / {
+        try_files $uri @serve_html;
+    }
+
+    location @serve_html {
+        default_type text/html;
+        return 200 '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Darbar — Platform Services</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        h1 { margin: 0 0 0.25rem; font-size: 1.75rem; font-weight: 700; }
+        .subtitle { color: #94a3b8; margin: 0 0 2rem; font-size: 0.95rem; }
+        .service {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            margin: 0.5rem 0;
+            background: #334155;
+            border-radius: 10px;
+            color: #38bdf8;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .service:hover {
+            background: #475569;
+            transform: translateX(4px);
+        }
+        .service .icon { font-size: 1.3rem; }
+        .service .label { font-weight: 500; }
+        .service .desc { color: #94a3b8; font-size: 0.8rem; }
+        .footer { margin-top: 2rem; color: #475569; font-size: 0.75rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>&#x1F451; Darbar</h1>
+        <p class="subtitle">Platform Services Portal</p>
+
+        <a class="service" href="//pgadmin.${PLATFORM_SUBDOMAIN}.${DOMAIN}">
+            <span class="icon">&#x1F5C4;&#xFE0F;</span>
+            <div>
+                <div class="label">pgAdmin</div>
+                <div class="desc">Database management &amp; administration</div>
+            </div>
+        </a>
+
+        <!-- Add new platform services here -->
+        <!-- Example:
+        <a class="service" href="//grafana.${PLATFORM_SUBDOMAIN}.${DOMAIN}">
+            <span class="icon">&#x1F4CA;</span>
+            <div>
+                <div class="label">Grafana</div>
+                <div class="desc">Monitoring &amp; observability dashboards</div>
+            </div>
+        </a>
+        -->
+
+        <p class="footer">Access restricted to authorized personnel</p>
+    </div>
+</body>
+</html>';
+    }
+}

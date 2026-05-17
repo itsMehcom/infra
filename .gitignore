@@ -1,3 +1,5 @@
 *.env
 logs/*
 platform/postgres/backups/
+platform/pgadmin/backups/
+.htpasswd
