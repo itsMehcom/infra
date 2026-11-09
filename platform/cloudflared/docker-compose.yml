@@ -1,0 +1,36 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    container_name: cloudflared
+    restart: unless-stopped
+
+    environment:
+      - TUNNEL_METRICS=0.0.0.0:20241
+
+    env_file:
+      - ../../environments/production/cloudflared.env
+
+    command: tunnel --no-autoupdate run
+
+    networks:
+      - internal
+
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+    # cloudflared runs as non-root by default (UID 65532)
+    # No volumes needed — tunnel config is managed via Cloudflare dashboard
+    # No ports exposed — all connections are outbound-only
+
+networks:
+  internal:
+    external: true

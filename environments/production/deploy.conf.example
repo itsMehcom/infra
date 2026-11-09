@@ -1,0 +1,65 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Deployment Configuration                                  ║
+# ║  Controls which services are deployed in this environment  ║
+# ║  Copy to deploy.conf and adjust for your deployment        ║
+# ╚═══════════════════════════════════════════════════════════╝
+
+# ─────────────────────────────────────────────────────────
+# Ingress Mode
+# ─────────────────────────────────────────────────────────
+# How external traffic reaches nginx. This controls which
+# additional ingress services are deployed and how nginx
+# should be configured.
+#
+# Options:
+#   direct          — Nginx ports (80/443) exposed directly to the internet.
+#                     You handle TLS certs, DDoS protection, etc.
+#
+#   cloudflare_proxy — Nginx ports exposed, but DNS points through Cloudflare.
+#                      Cloudflare terminates TLS and proxies to your server.
+#                      Requires: cloudflare-real-ip.conf snippet active in nginx.
+#
+#   cloudflare_tunnel — No ports exposed. cloudflared connector creates an
+#                       outbound tunnel to Cloudflare's edge. Most secure option.
+#                       Requires: DEPLOY_CLOUDFLARED=true, tunnel token in env.
+#
+#   custom          — You manage ingress yourself (Tailscale, WireGuard, etc.).
+#                     Nginx may or may not expose ports depending on your setup.
+#
+INGRESS_MODE=cloudflare_proxy
+
+# ─────────────────────────────────────────────────────────
+# Platform Services
+# ─────────────────────────────────────────────────────────
+# Toggle platform components on/off for this deployment.
+# Set to "true" to deploy, anything else to skip.
+
+# Cloudflare Tunnel connector — only needed with INGRESS_MODE=cloudflare_tunnel
+DEPLOY_CLOUDFLARED=false
+
+# PostgreSQL shared database
+DEPLOY_POSTGRES=true
+
+# pgAdmin 4 database management UI
+DEPLOY_PGADMIN=true
+
+# Nginx reverse proxy — almost always required
+DEPLOY_NGINX=true
+
+# ─────────────────────────────────────────────────────────
+# Application Services
+# ─────────────────────────────────────────────────────────
+# Toggle application workloads for this deployment.
+
+# Core API (Phoenix/Elixir backend)
+# DEPLOY_CORE_API=true
+
+# ─────────────────────────────────────────────────────────
+# Future / Commented-out Services
+# ─────────────────────────────────────────────────────────
+# Uncomment as you onboard new services.
+
+# DEPLOY_PGBOUNCER=false
+# DEPLOY_GRAFANA=false
+# DEPLOY_PROMETHEUS=false
+# DEPLOY_KEYCLOAK=false

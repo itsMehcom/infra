@@ -12,7 +12,8 @@ Our infrastructure is split logically by concern to make it easy for developers 
 infrastructure/
 ├── deploy/           # Helper scripts to validate and deploy resources
 ├── environments/     # Environment-specific configuration maps (e.g., global.env, postgres.env)
-├── platform/         # Foundational systems (reverse proxy, database, monitoring)
+├── platform/         # Foundational systems (reverse proxy, database, tunnels, monitoring)
+│   ├── cloudflared/     # Cloudflare Tunnel — secure ingress without exposed ports
 │   ├── reverse-proxy/   # NGINX reverse proxy
 │   ├── postgres/        # PostgreSQL shared database platform
 │   └── pgadmin/         # pgAdmin 4 database management UI
@@ -49,13 +50,15 @@ Are you a newcomer trying to spin up or deploy this code? Follow these steps:
 ### 1. Setup Your Environment Variables
 All configuration strings, secrets, and API domains are centralized in the `/environments` folder.
 1. Navigate to `/environments/production/`.
-2. Copy `global.env.example` → `global.env` and fill in your domains (e.g., `DOMAIN`, `API_DOMAIN`, `PLATFORM_SUBDOMAIN`).
-3. Copy `postgres.env.example` → `postgres.env` and set your database superuser password.
-4. Copy `pgadmin.env.example` → `pgadmin.env` and set your pgAdmin admin credentials.
-5. See [`platform/postgres/README.md`](platform/postgres/README.md) for full database setup and onboarding.
-6. See [`platform/pgadmin/README.md`](platform/pgadmin/README.md) for pgAdmin setup.
-7. Create backup dirs: `mkdir -p platform/postgres/backups/{base,wal,logical}`
-8. Generate platform services gateway credentials: `htpasswd -c platform/reverse-proxy/nginx/.htpasswd ops_admin`
+2. Copy `deploy.conf.example` → `deploy.conf` and configure your ingress mode and which services to deploy.
+3. Copy `global.env.example` → `global.env` and fill in your domains (e.g., `DOMAIN`, `API_DOMAIN`, `PLATFORM_SUBDOMAIN`).
+4. Copy `postgres.env.example` → `postgres.env` and set your database superuser password.
+5. Copy `pgadmin.env.example` → `pgadmin.env` and set your pgAdmin admin credentials.
+6. *(If using Cloudflare Tunnel)* Copy `cloudflared.env.example` → `cloudflared.env` and paste your [tunnel token](platform/cloudflared/README.md).
+7. See [`platform/postgres/README.md`](platform/postgres/README.md) for full database setup and onboarding.
+8. See [`platform/pgadmin/README.md`](platform/pgadmin/README.md) for pgAdmin setup.
+9. Create backup dirs: `mkdir -p platform/postgres/backups/{base,wal,logical}`
+10. Generate platform services gateway credentials: `htpasswd -c platform/reverse-proxy/nginx/.htpasswd ops_admin`
 
 ### 2. Launching Services
 Deployment shouldn't be a manual guessing game mapping docker commands for every container. We leverage helper scripts in the `/deploy` folder to automate validation and startup.
