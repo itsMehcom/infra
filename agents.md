@@ -121,6 +121,7 @@ Before proposing or executing ANY change, verify against this checklist:
 - [ ] **Pinned image tags**: Pinned version tags only (`postgres:18.3-bookworm`). No `:latest`.
 - [ ] **Distroless image handling**: Distroless images (`cloudflare/cloudflared`) lack `/bin/sh` and `curl`. Use exec-form healthchecks (`["CMD", "binary", "arg"]`).
 - [ ] **Volume directory trap prevention**: Missing files mounted into containers are auto-created by Docker as directories on the host. Always ensure files (`.htpasswd`) exist before compose mounts them.
+- [ ] **Host bind-mount permissions**: For host directories mounted into non-root containers (e.g. `logs/`, `backups/`), use `ensure_writable_dirs` in `deploy-prod.sh` to apply `0777` to directory inodes in $\mathcal{O}(1)$ time. Never run recursive `chmod -R` over backup or log directory trees to avoid severe deployment delays and disk I/O spikes.
 - [ ] **Read-only mounts**: Mount configs with `:ro`.
 - [ ] **Memory limits enforced**: Prevent single-container OOM host collapse.
 - [ ] **Least privilege**: Run as non-root UID where supported. No `privileged: true`.

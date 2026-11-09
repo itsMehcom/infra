@@ -8,12 +8,17 @@ services:
       - ../../environments/production/pgadmin.env
       - ../../environments/production/postgres.env   # provides POSTGRES_USER
 
-    entrypoint: /pgadmin4/entrypoint-wrapper.sh
+    entrypoint: ["/bin/sh", "/pgadmin4/entrypoint-wrapper.sh"]
 
     volumes:
       - pgadmin_data:/var/lib/pgadmin
       - ./conf/entrypoint-wrapper.sh:/pgadmin4/entrypoint-wrapper.sh:ro
-      - ../../../logs/pgadmin:/var/log/pgadmin
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
     networks:
       - internal

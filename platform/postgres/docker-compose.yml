@@ -12,7 +12,12 @@ services:
       - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - ./conf/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
       - ./backups:/backups
-      - ../../../logs/postgres:/var/log/postgresql
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
     command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
 

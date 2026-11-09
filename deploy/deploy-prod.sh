@@ -87,11 +87,33 @@ if [[ ${#MISSING_ENVS[@]} -gt 0 ]]; then
 fi
 
 # ─────────────────────────────────────────────────────────
-# Pre-flight: Ensure log directories exist
+# Helper: Ensure directories exist & are writable
+# Optimized O(1): Sets 0777 on directory inodes only without
+# expensive recursive traversal (-R) over accumulated files.
 # ─────────────────────────────────────────────────────────
-mkdir -p "${INFRA_ROOT}/logs/nginx"
-mkdir -p "${INFRA_ROOT}/logs/postgres"
-mkdir -p "${INFRA_ROOT}/logs/pgadmin"
+ensure_writable_dirs() {
+    for dir in "$@"; do
+        [[ ! -d "$dir" ]] && mkdir -p "$dir"
+        chmod 0777 "$dir"
+    done
+}
+
+# ─────────────────────────────────────────────────────────
+# Pre-flight: Ensure log directories exist & are writable
+# ─────────────────────────────────────────────────────────
+ensure_writable_dirs \
+    "${INFRA_ROOT}/logs" \
+    "${INFRA_ROOT}/logs/nginx" \
+    "${INFRA_ROOT}/logs/postgres"
+
+# ─────────────────────────────────────────────────────────
+# Pre-flight: Auto-fix script & configuration permissions
+# Enforces executable permissions on all entrypoint wrappers,
+# maintenance scripts, and hooks, plus read permissions on
+# configs mounted into containers (no manual chmod needed).
+# ─────────────────────────────────────────────────────────
+find "${INFRA_ROOT}" -name ".git" -prune -o -type f \( -name "*.sh" -o -name "*entrypoint*" \) -exec chmod 0755 {} +
+find "${INFRA_ROOT}/platform" -name ".git" -prune -o -type f \( -name "*.conf" -o -name "*.json" \) -exec chmod 0644 {} +
 
 # ─────────────────────────────────────────────────────────
 # Pre-flight: Prevent Nginx .htpasswd directory mount trap
@@ -145,6 +167,13 @@ if [[ "${DEPLOY_POSTGRES:-false}" == "true" ]]; then
 
     cd "${INFRA_ROOT}/platform/postgres"
 
+    # Ensure backup directories exist and are writable by postgres container (UID 999) for WAL archiving
+    ensure_writable_dirs \
+        "${INFRA_ROOT}/platform/postgres/backups" \
+        "${INFRA_ROOT}/platform/postgres/backups/base" \
+        "${INFRA_ROOT}/platform/postgres/backups/wal" \
+        "${INFRA_ROOT}/platform/postgres/backups/logical"
+
     # shellcheck source=/dev/null
     source "${ENV_DIR}/postgres.env"
 
@@ -169,6 +198,9 @@ if [[ "${DEPLOY_PGADMIN:-false}" == "true" ]]; then
     echo "━━━ pgAdmin Database Manager ━━━"
 
     cd "${INFRA_ROOT}/platform/pgadmin"
+
+    # Ensure pgAdmin backup directory exists and is writable
+    ensure_writable_dirs "${INFRA_ROOT}/platform/pgadmin/backups"
 
     echo "Deploying pgAdmin..."
     docker compose up -d

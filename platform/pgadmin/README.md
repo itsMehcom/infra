@@ -238,10 +238,9 @@ docker logs pgadmin
 2. Verify env vars: `docker exec pgadmin env | grep -E 'POSTGRES_USER|PGADMIN_SERVER'`
 3. Check servers.json was generated: `docker exec pgadmin cat /pgadmin4/servers.json`
 
-### "Permission denied" errors
+### Logging & Container Logs
 
-pgAdmin runs as UID 5050. Ensure the log directory is writable:
-
-```bash
-sudo chown -R 5050:5050 logs/pgadmin
-```
+pgAdmin logs are streamed directly to `stdout`/`stderr` following 12-factor container best practices:
+- Live logs: `docker logs -f pgadmin`
+- Log level is controlled by `PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10` (DEBUG) or `20` (INFO) in `pgadmin.env`.
+- Docker rotates logs automatically via `max-size: "50m"` / `max-file: "3"` configured in `docker-compose.yml`.

@@ -51,6 +51,9 @@ cp environments/production/postgres.env.example environments/production/postgres
 
 ```bash
 mkdir -p platform/postgres/backups/{base,wal,logical}
+# Allow container process (UID 999) to write WAL segments and dumps without sudo
+# Note: Target directory inodes directly (non-recursive) to keep permission setup O(1)
+chmod 0777 platform/postgres/backups platform/postgres/backups/{base,wal,logical}
 ```
 
 ### 4. Start PostgreSQL
@@ -239,6 +242,7 @@ Restore just one service's database from a logical dump:
 5. Restore:
    ```bash
    mkdir -p platform/postgres/backups/{base,wal,logical}
+   chmod 0777 platform/postgres/backups platform/postgres/backups/{base,wal,logical}
    # Copy backups into place
    cd platform/postgres
    docker compose up -d
@@ -333,9 +337,18 @@ crontab /opt/infra/platform/postgres/cron/postgres-backup-cron
 | `wal_level` | replica | Supports archiving + future replication |
 | `archive_mode` | on | Required for PITR |
 | `archive_timeout` | 300s | Archive WAL every 5 min minimum |
+| `logging_collector` | off | Container stdout/stderr streaming (Docker native) |
+| `log_destination` | stderr | Emits logs to Docker daemon for collection and rotation |
 | `log_min_duration_statement` | 500ms | Log slow queries |
 | `autovacuum_vacuum_scale_factor` | 0.05 | More aggressive autovacuum |
 | `timezone` | Asia/Kolkata | Match application timezone |
+
+### Logging & Container Logs
+
+PostgreSQL logs are streamed directly to `stderr`/`stdout` following Docker 12-factor best practices.
+- Stream live logs: `docker logs -f postgres`
+- Docker rotates logs automatically via `max-size: "50m"` / `max-file: "3"` configured in `docker-compose.yml`.
+- Cron automation logs (physical backup, dump, vacuum, health check) continue to be saved on the host at `infra/logs/postgres/*.log`.
 
 ### pg_hba.conf
 
